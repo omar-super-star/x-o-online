@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>x-o</title>
+        <style>
+          .box{
+              height: 150px;
+              width:150px;
+              background-color: aquamarine;
+              text-align: center;
+              font-size: 75px;
+          }
+          #cont{
+              width:500px;
+              margin-left: 25%;
+              margin-top: 10%;
+          }
+          .continer{
+              display:grid;
+              grid-gap: 15px;
+              grid-template-columns: auto auto auto;
+          }
+          .score{
+              display:inline-block;
+              
+          }
+          .player{
+            display:inline-block;
+            margin-left: 50px;
+            margin-top: 0;
+          }
+          #getname{
+              text-align:center;
+              padding-top: 250px;
+              padding-bottom: 250px
+              
+          }
+          .boxc{
+            box-shadow: 0 8px 16px 0   #A6EEF7  ;
+            background-color: cornsilk;
+            font-size:20px;
+           
+           border: solid black;
+           width:50%;
+           margin-left: 25%;
+           margin-right: 25%;
+           position: absolute;
+           top:40%;
+           right:0%;
+          }
+          #cont,#endbox,#wretry,#disconnect{
+            display: none; 
+          }
+          #btn{
+              margin-bottom: 5px;
+          }
+          #load{
+            border: 16px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 16px solid #4af307;
+  width: 120px;
+  height: 120px;
+  margin:0 auto;
+  animation: load 2s linear infinite;
+          }
+          @keyframes load {
+              0%{ transform: rotate(0deg); }
+              100%{ transform: rotate(360deg); }
+          }
+        </style>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+    </head>
+    <body>
+       
+        
+        <div id="cont" >
+            <h1 id="turn"></h1>
+            <h1 class="player" id="player1">player1(x): <p class="score" id="score1"></p></h1>
+        <h1 class="player" id="player2">player2(o): <p class="score" id="score2"></p></h1>
+            <div class="continer ">
+                
+                <div class="box" id="0-0" ></div>
+                <div class="box" id="0-1" ></div>
+                <div class="box" id="0-2" ></div>
+            
+        
+                <div class="box" id="1-0" ></div>
+                <div class="box" id="1-1" ></div>
+                <div class="box" id="1-2" ></div>
+            
+        
+                <div class="box" id="2-0" ></div>
+                <div class="box" id="2-1" ></div>
+                <div class="box" id="2-2" ></div>
+            
+            </div>
+            </div>
+
+           
+             
+              <div id="loadbox" class="boxc" >
+                  <div id="load" >
+
+                  </div>
+                <p>wait player to play with him </p>
+            </div>
+            
+            <div id="disconnect" class="boxc" >
+            
+              <p>your friend disconnect</p>
+              <input id="newg1" type="button" value="new game" class=" btn-success" />
+          </div>
+                <div id="endbox" class="boxc">
+                    
+                    
+                    <p id="plname" style="text-align: center;">wait player to play with him </p>
+                    <br/>
+                    <div style="text-align:center">
+                    <input id="newg" type="button" value="new game" class=" btn-success" />
+                    <input id="reg"  type="button" value="retrygame" class=" btn-success" />
+                </div>
+                </div>
+                <div id="wretry" class="boxc" >
+                    
+                    
+                    <p id="want" style="text-align: center;">the another player want to play again with you </p>
+                    <br/>
+                    <div style="text-align:center">
+                    <input id="yes" type="button" value="yes" class=" btn-success" />
+                    <input id="no"  type="button" value="no" class=" btn-danger" />
+                </div>
+<br/>
+                </div>
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+let reg=document.getElementById("reg");
+let newg=document.getElementById("newg");
+let newg1=document.getElementById("newg1");
+let no=document.getElementById("no");
+let yes=document.getElementById("yes");
+let wretry=document.getElementById("wretry");
+let endbox=document.getElementById("endbox");
+let loadbox=document.getElementById("loadbox");
+let cont=document.getElementById("cont");
+let disconnect=document.getElementById("disconnect");
+let winnerp=document.getElementById("plname");
+let score1=document.getElementById("score1");
+let score2=document.getElementById("score2")
+let turn=document.getElementById("turn");
+let playernum=0;
+let playerrole=0;
+
+let rowofbox={
+    "0":0,
+    "1":0,
+    "2":0
+}
+
+let columnofbox={
+    "0":0,
+    "1":0,
+    "2":0
+}
+
+let crossofbox={
+    "0":0,
+    "1":0
+}
+
+let gameover=false;
+
+let winner="";
+checkhappen=false
+
+function alertwinner(text){
+        console.log("here")
+        console.log(text)
+        endbox.style.display='block';
+        winnerp.innerHTML=text;
+    }
+
+function retrygame(){
+    playerrole=0
+    wretry.style.display="none";
+    endbox.style.display='none';
+    loadbox.style.display='none';
+    disconnect.style.display='none';
+    rowofbox={
+    "0":0,
+    "1":0,
+    "2":0
+    }
+    columnofbox={
+    "0":0,
+    "1":0,
+    "2":0
+    }
+    crossofbox={
+    "0":0,
+    "1":0
+    }
+    gameover=false;
+    winner=""
+    boxes=document.getElementsByClassName("box")
+    for(box of boxes){
+        box.innerHTML=""
+        box.data=false
+    }
+}
+
+function check(number,ch,player,score){
+    if( number == ch){
+            gameover=true
+            checkhappen=true
+            winner=player
+            score.innerHTML=Number(score.innerHTML)+1
+            //alert(`${winner} is win`)
+            
+            alertwinner(`${winner} is win`)
+            //retrygame()
+            return true
+        }
+    return false
+}
+
+
+function endgame(box,m){
+    
+    if(m==0){
+        var finish=3
+        var add=1
+        var player="player1"
+        var score=score1
+    }else{
+        var finish=-3
+        var add=-1
+        var player="player2"
+        var score=score2
+    }
+    row=box.id[0]
+    column=box.id[2]
+
+
+    if(row == column){
+        crossofbox["0"]+=add
+       
+        
+        if(row=="1"){
+            crossofbox["1"]+=add
+        }
+
+    }
+
+    else if(box.id=="2-0" || box.id=="0-2"){
+        crossofbox["1"]+=add
+    }
+    rowofbox[row]+=add
+    columnofbox[column]+=add
+
+
+    let arr=[crossofbox["0"],
+    crossofbox["1"],
+    rowofbox[row],
+    columnofbox[column]]
+    for (const ch of arr){
+        c=check(ch,finish,player,score);
+        if(c){
+            break;
+        }
+    }
+    
+}
+
+function game(box){
+    
+    if(!box.data && !gameover && box.className=="box"){
+        if(playerrole%2==0){
+            box.innerHTML="x"
+            endgame(box,0)
+    }
+        else{
+            box.innerHTML="o"
+            endgame(box,1)
+    }
+    if(checkhappen){
+        checkhappen=false
+    }else{
+    playerrole++
+    if(playerrole%2==playernum){
+        turn.innerHTML="your turn"
+    }else{
+        turn.innerHTML="wait your turn"
+    }
+    box.data=true
+    }
+    if(playerrole>=9){
+        alert(`draw`)
+        gameover=true
+        //retrygame()
+    }
+}
+}
+
+newg.onclick=()=>{
+    location.reload();
+
+}
+newg1.onclick=()=>{
+    location.reload();
+
+}
+
+
+let continer=document.getElementsByClassName("continer")[0];
+
+
+
+let socket = io();
+let roomcode="";
+
+var waiting=true;
+socket.on("getplayerdetail",(msg)=>{
+    roomcode=msg.room;
+    playernum=msg.num;
+    waiting=false;
+    loadbox.style.display="none"
+    cont.style.display="block"
+    if(playerrole%2==playernum){
+        turn.innerHTML="your turn"
+    }else{
+        turn.innerHTML="wait your turn"
+    }
+        console.log(msg);
+})
+
+continer.onclick=(e)=>{
+    console.log(playerrole)
+    console.log(waiting)
+    if(playerrole%2==playernum && !waiting){
+    socket.emit("newgame",{
+        pos:e.target.id
+    })
+    }
+};
+socket.on("recivenewgame",(data)=>{
+  var box=document.getElementById(data);
+  console.log(data)
+  game(box)
+})
+socket.on('wantretry',()=>{
+    wretry.style.display="block";
+    no.onclick=()=>{
+        socket.emit("retry","no")
+    }
+    yes.onclick=()=>{
+        socket.emit("retry","yes")
+    }
+    
+})
+
+socket.on("retry",(data)=>{
+        if(data==="yes"){
+            console.log(data)
+            retrygame();
+        }else{
+            location.reload();
+        }
+    })
+    socket.on("disconnection",()=>{
+        /*window.open("http://localhost:3000/start")*/
+        wretry.style.display="none";
+    endbox.style.display='none';
+        disconnect.style.display='block';
+        
+    })
+    
+reg.onclick=()=>{
+    socket.emit("wantretry")
+}
+            </script>
+    </body>
+</html>
